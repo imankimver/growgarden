@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grow a Garden – Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+    a {    text-decoration: none; }
+    h1 {
+      text-align: center;
+      color: #2d3e50;
+      margin-bottom: 30px;
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .left {
+      width: 70%;
+    }
+
+    .right {
+      width: 30%;
+    }
+
+    .category-section {
+      margin-bottom: 40px;
+    }
+
+    .category-section h2 {
+      text-align: center;
+      color: #4CAF50;
+      margin-bottom: 10px;
+      text-transform: capitalize;
+    }
+
+    .stock-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .stock-card, .weather-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      width: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s ease;
+      text-align: center;
+    }
+
+    .stock-card:hover, .weather-card:hover {
+      transform: scale(1.03);
+    }
+
+    .stock-card img, .weather-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .stock-card h3, .weather-card h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .stock-card p, .weather-card p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    #stock-status, #weather-status {
+      text-align: center;
+      margin: 10px 0;
+      color: #888;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        flex-direction: column;
+      }
+      .left, .right {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🌱 Grow a Garden Dashboard</h1>
+<h2 style="text-align: center;text-decoration: none;"><a href="index.html"> 🚀 Stock/Weather Live</a> | <a href="garden-info.html">📖 INFORMATIONS</a></h2>
+  <div class="dashboard">
+    <!-- Left: Stocks -->
+    <div class="left">
+      <div id="stock-status">Loading stock data...</div>
+      <div id="stocks">
+        <div class="category-section" id="seed_stock">
+          <h2>Seeds</h2>
+          <div class="stock-grid"></div>
+        </div>
+        <div class="category-section" id="gear_stock">
+          <h2>Gear</h2>
+          <div class="stock-grid"></div>
+        </div>
+        <div class="category-section" id="egg_stock">
+          <h2>Eggs</h2>
+          <div class="stock-grid"></div>
+        </div>
+        <div class="category-section" id="cosmetic_stock">
+          <h2>Cosmetics</h2>
+          <div class="stock-grid"></div>
+        </div>
+        <div class="category-section" id="eventshop_stock">
+          <h2>Event Shop</h2>
+          <div class="stock-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Weather -->
+    <div class="right">
+      <div id="weather-status">Loading weather data...</div>
+      <div class="category-section">
+        <h2>Current Weather</h2>
+        <div class="stock-grid" id="weather-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STOCK_API = "https://api.joshlei.com/v2/growagarden/stock";
+    const WEATHER_API = "https://api.joshlei.com/v2/growagarden/weather";
+
+    const stockStatus = document.getElementById("stock-status");
+    const weatherStatus = document.getElementById("weather-status");
+
+    async function loadStock() {
+      try {
+        const response = await fetch(STOCK_API);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const data = await response.json();
+
+        const categories = ["seed_stock", "gear_stock", "egg_stock", "cosmetic_stock", "eventshop_stock"];
+        categories.forEach(cat => {
+          document.querySelector(`#${cat} .stock-grid`).innerHTML = "";
+        });
+
+        for (const [key, items] of Object.entries(data)) {
+          const grid = document.querySelector(`#${key} .stock-grid`);
+          if (!grid || !Array.isArray(items)) continue;
+
+          items.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "stock-card";
+            card.innerHTML = `
+              <img src="${item.icon}" alt="${item.display_name}" />
+              <h3>${item.display_name}</h3>
+              <p><strong>Quantity:</strong> ${item.quantity}</p>
+              <p><strong>Start:</strong> ${formatDate(item.Date_Start)}</p>
+              <p><strong>End:</strong> ${formatDate(item.Date_End)}</p>
+            `;
+            grid.appendChild(card);
+          });
+        }
+
+        stockStatus.textContent = "Stock last updated: " + new Date().toLocaleTimeString();
+      } catch (err) {
+        console.error(err);
+        stockStatus.textContent = "Failed to load stock: " + err.message;
+      }
+    }
+
+    async function loadWeather() {
+      try {
+        const response = await fetch(WEATHER_API);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const json = await response.json();
+
+        const weatherList = json.weather?.filter(item => item.active === true) || [];
+        const container = document.getElementById("weather-container");
+        container.innerHTML = "";
+
+        if (weatherList.length === 0) {
+          weatherStatus.textContent = "No active weather events right now.";
+          return;
+        }
+
+        weatherList.forEach(data => {
+          const card = document.createElement("div");
+          card.className = "weather-card";
+          card.innerHTML = `
+            <img src="${data.icon}" alt="${data.weather_name}" />
+            <h2>${data.weather_name}</h2>
+            <p><strong>Duration:</strong> ${data.duration ?? 'N/A'} seconds</p>
+            <p><strong>Status:</strong> 🟢 Active</p>
+          `;
+          container.appendChild(card);
+        });
+
+        weatherStatus.textContent = "Weather last updated: " + new Date().toLocaleTimeString();
+      } catch (err) {
+        console.error(err);
+        weatherStatus.textContent = "Failed to load weather data: " + err.message;
+      }
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString();
+    }
+
+    // Load data initially and every 5 mins
+    loadStock();
+    loadWeather();
+    setInterval(() => {
+      loadStock();
+      loadWeather();
+    }, 5000); // 5 secs
+  </script>
+</body>
+</html>
