@@ -163,7 +163,6 @@
     <a href="https://www.roblox.com/games/126884695634066/Grow-a-Garden" target="_blank">🎮 Play Now on Roblox</a>
 </div>
 <h2 style="text-align: center;text-decoration: none;"><a href="index.html"> 🚀 Stock/Weather Live</a> | <a href="garden-info.html">📖 INFORMATIONS</a></h2>
-<a style="font-size: 17px; padding: 4px 30px; display: flex ; justify-content: center;" href="javascript:void(0);" onclick="refreshAll()" title="Refresh Data">🔄 Refresh Live Data</a>
   <div class="dashboard">
     <!-- Left: Stocks -->
     <div class="left">
@@ -294,11 +293,24 @@
     loadWeather();
   }
 
-  // Auto-refresh every 2 minutes (120000 ms)
-  setInterval(() => {
-    loadStock();
-    loadWeather();
-  }, 300000);
+  // Only refresh the whole page exactly every 5 minutes
+  function refreshAtExact5Min() {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    const milliseconds = now.getMilliseconds();
+
+    const minutesUntilNext = 5 - (minutes % 5);
+    const msUntilNext =
+      (minutesUntilNext * 60 * 1000) - (seconds * 1000 + milliseconds);
+
+    setTimeout(() => {
+      location.reload();
+    }, msUntilNext);
+  }
+
+  // Start the 5-minute exact refresh timer
+  refreshAtExact5Min();
   </script>
   <div class="floating-menu">
   <a href="#seed_stock" title="Seeds">🌱</a>
@@ -358,10 +370,6 @@
     <a href="calculator.html" style="background: #2196F3; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 16px; margin-right: 10px;">🧮 Try Calculator (Coming Soon)</a>
     <a href="garden-info.html" style="background: #4CAF50; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 16px;">📖 Learn More</a>
   </div>
-</div>
-<!-- Floating Refresh Button -->
-<div class="floating-menu" style="right: 80px;">
-  <a style="font-size: 17px; padding: 4px 30px;" href="javascript:void(0);" onclick="refreshAll()" title="Refresh Data">🔄 Refresh Live Data</a>
 </div>
 </body>
 </html>
