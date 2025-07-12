@@ -3,29 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Garden Value Calculator – Coming Soon</title>
+  <title>Garden Value Calculator</title>
+  
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f3f6f9;
       margin: 0;
-      padding: 0;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
       text-align: center;
     }
+
     h1 {
       font-size: 2.5em;
       color: #2d3e50;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
-    p {
+
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #mutationCheckboxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px 25px;
+    margin-top: 15px;
+    text-align: left;
+    align-items: center;
+    justify-items: start;
+    }
+
+    .checkbox-label {
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background-color: #f8f8f8;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    }
+
+    #result {
       font-size: 1.2em;
-      color: #555;
+      color: #333;
+      margin-top: 20px;
     }
+
     a {
       margin-top: 30px;
       display: inline-block;
@@ -36,14 +91,973 @@
       border-radius: 8px;
       font-size: 16px;
     }
+
     a:hover {
       background: #45a049;
     }
+    .form-result-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+#result {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.08);
+  text-align: left;
+  font-size: 1.1em;
+  color: #333;
+  order: -1; /* Move result to top on mobile */
+}
+
+@media (min-width: 768px) {
+  .form-result-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  #calcForm {
+    width: 55%;
+  }
+
+  #result {
+    width: 45%;
+    order: 1; /* Move result to right on desktop */
+  }
+}
+}
   </style>
 </head>
 <body>
   <h1>🧮 Garden Value Calculator</h1>
-  <p>This feature is <strong>Coming Soon!</strong><br>We're working hard to bring you a powerful and easy-to-use calculator.</p>
+
+  <div class="form-result-container">
+  <div id="result">
+    <p style="opacity: 0.6;">Your result will appear here...</p>
+  </div>
+
+  <form id="calcForm">
+    <select id="fruitName" required>
+      <option value="">Select fruit...</option>
+    </select>
+
+    <input style="width: 96%;" type="number" id="weight" placeholder="Enter Weight (e.g. 100)" required min="1" />
+
+    <select id="variant" required>
+      <option value="">Select variant...</option>
+    </select>
+
+    <div id="mutationCheckboxes"></div>
+
+    <button type="submit">Calculate</button>
+  </form>
+</div>
   <a href="index.html">← Back to Dashboard</a>
+  <script>
+    const data = {
+      // Paste only the JSON content inside the {} here
+      "fruits": [
+        {
+        "item_id": "carrot",
+        "display_name": "Carrot",
+        "baseValue": 20,
+        "weightDivisor": 0.275
+        },
+        {
+        "item_id": "strawberry",
+        "display_name": "Strawberry",
+        "baseValue": 15,
+        "weightDivisor": 0.3
+        },
+        {
+        "item_id": "blueberry",
+        "display_name": "Blueberry",
+        "baseValue": 20,
+        "weightDivisor": 0.2
+        },
+        {
+        "item_id": "orange_tulip",
+        "display_name": "Orange Tulip",
+        "baseValue": 850,
+        "weightDivisor": 0.05
+        },
+        {
+        "item_id": "tomato",
+        "display_name": "Tomato",
+        "baseValue": 30,
+        "weightDivisor": 0.5
+        },
+        {
+        "item_id": "corn",
+        "display_name": "Corn",
+        "baseValue": 40,
+        "weightDivisor": 2
+        },
+        {
+        "item_id": "daffodil",
+        "display_name": "Daffodil",
+        "baseValue": 1000,
+        "weightDivisor": 0.2
+        },
+        {
+        "item_id": "watermelon",
+        "display_name": "Watermelon",
+        "baseValue": 3000,
+        "weightDivisor": 7
+        },
+        {
+        "item_id": "pumpkin",
+        "display_name": "Pumpkin",
+        "baseValue": 3400,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "apple",
+        "display_name": "Apple",
+        "baseValue": 275,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "bamboo",
+        "display_name": "Bamboo",
+        "baseValue": 4000,
+        "weightDivisor": 4
+        },
+        {
+        "item_id": "coconut",
+        "display_name": "Coconut",
+        "baseValue": 400,
+        "weightDivisor": 14
+        },
+        {
+        "item_id": "cactus",
+        "display_name": "Cactus",
+        "baseValue": 3400,
+        "weightDivisor": 7
+        },
+        {
+        "item_id": "dragon_fruit",
+        "display_name": "Dragon Fruit",
+        "baseValue": 4750,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "mango",
+        "display_name": "Mango",
+        "baseValue": 6500,
+        "weightDivisor": 15
+        },
+        {
+        "item_id": "grape",
+        "display_name": "Grape",
+        "baseValue": 7850,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "mushroom",
+        "display_name": "Mushroom",
+        "baseValue": 151000,
+        "weightDivisor": 25
+        },
+        {
+        "item_id": "pepper",
+        "display_name": "Pepper",
+        "baseValue": 8000,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "cacao",
+        "display_name": "Cacao",
+        "baseValue": 12000,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "beanstalk",
+        "display_name": "Beanstalk",
+        "baseValue": 28000,
+        "weightDivisor": 10
+        },
+        {
+        "item_id": "ember_lily",
+        "display_name": "Ember Lily",
+        "baseValue": 66666,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "sugar_apple",
+        "display_name": "Sugar Apple",
+        "baseValue": 48000,
+        "weightDivisor": 9
+        },
+        {
+        "item_id": "burning_bud",
+        "display_name": "Burning Bud",
+        "baseValue": 65000,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "cauliflower",
+        "display_name": "Cauliflower",
+        "baseValue": 50,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "rafflesia",
+        "display_name": "Rafflesia",
+        "baseValue": 3500,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "green_apple",
+        "display_name": "Green Apple",
+        "baseValue": 300,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "avocado",
+        "display_name": "Avocado",
+        "baseValue": 350,
+        "weightDivisor": 6.5
+        },
+        {
+        "item_id": "banana",
+        "display_name": "Banana",
+        "baseValue": 2000,
+        "weightDivisor": 1.5
+        },
+        {
+        "item_id": "pineapple",
+        "display_name": "Pineapple",
+        "baseValue": 2000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "kiwi",
+        "display_name": "Kiwi",
+        "baseValue": 2750,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "bell_pepper",
+        "display_name": "Bell Pepper",
+        "baseValue": 5500,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "prickly_pear",
+        "display_name": "Prickly Pear",
+        "baseValue": 7000,
+        "weightDivisor": 7
+        },
+        {
+        "item_id": "loquat",
+        "display_name": "Loquat",
+        "baseValue": 8000,
+        "weightDivisor": 6.5
+        },
+        {
+        "item_id": "pitcher_plant",
+        "display_name": "Pitcher Plant",
+        "baseValue": 32000,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "feijoa",
+        "display_name": "Feijoa",
+        "baseValue": 13000,
+        "weightDivisor": 10
+        },
+        {
+        "item_id": "wild_carrot",
+        "display_name": "Wild Carrot",
+        "baseValue": 25000,
+        "weightDivisor": 1.3
+        },
+        {
+        "item_id": "pear",
+        "display_name": "Pear",
+        "baseValue": 20000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "cantaloupe",
+        "display_name": "Cantaloupe",
+        "baseValue": 34000,
+        "weightDivisor": 5.5
+        },
+        {
+        "item_id": "parasol_flower",
+        "display_name": "Parasol Flower",
+        "baseValue": 200000,
+        "weightDivisor": 6
+        },
+        {
+        "item_id": "rosy_delight",
+        "display_name": "Rosy Delight",
+        "baseValue": 69000,
+        "weightDivisor": 10
+        },
+        {
+        "item_id": "elephant_ears",
+        "display_name": "Elephant Ears",
+        "baseValue": 77000,
+        "weightDivisor": 18
+        },
+        {
+        "item_id": "delphinium",
+        "display_name": "Delphinium",
+        "baseValue": 24000,
+        "weightDivisor": 0.3
+        },
+        {
+        "item_id": "lily_of_the_valley",
+        "display_name": "Lily of the Valley",
+        "baseValue": 49120,
+        "weightDivisor": 6
+        },
+        {
+        "item_id": "traveler's_fruit",
+        "display_name": "Traveler's Fruit",
+        "baseValue": 59000,
+        "weightDivisor": 15
+        },
+        {
+        "item_id": "peace_lily",
+        "display_name": "Peace Lily",
+        "baseValue": 24000,
+        "weightDivisor": 0.6
+        },
+        {
+        "item_id": "aloe_vera",
+        "display_name": "Aloe Vera",
+        "baseValue": 69000,
+        "weightDivisor": 5.5
+        },
+        {
+        "item_id": "guanabana",
+        "display_name": "Guanabana",
+        "baseValue": 72500,
+        "weightDivisor": 4
+        },
+        {
+        "item_id": "chocolate_carrot",
+        "display_name": "Chocolate Carrot",
+        "baseValue": 11000,
+        "weightDivisor": 0.275
+        },
+        {
+        "item_id": "red_lollipop",
+        "display_name": "Red Lollipop",
+        "baseValue": 50000,
+        "weightDivisor": 4
+        },
+        {
+        "item_id": "blue_lollipop",
+        "display_name": "Blue Lollipop",
+        "baseValue": 50000,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "candy_sunflower",
+        "display_name": "Candy Sunflower",
+        "baseValue": 80000,
+        "weightDivisor": 1.5
+        },
+        {
+        "item_id": "easter_egg",
+        "display_name": "Easter Egg",
+        "baseValue": 2500,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "candy_blossom",
+        "display_name": "Candy Blossom",
+        "baseValue": 100000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "peach",
+        "display_name": "Peach",
+        "baseValue": 300,
+        "weightDivisor": 2
+        },
+        {
+        "item_id": "raspberry",
+        "display_name": "Raspberry",
+        "baseValue": 100,
+        "weightDivisor": 0.75
+        },
+        {
+        "item_id": "papaya",
+        "display_name": "Papaya",
+        "baseValue": 1000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "banana",
+        "display_name": "Banana",
+        "baseValue": 1750,
+        "weightDivisor": 1.5
+        },
+        {
+        "item_id": "passionfruit",
+        "display_name": "Passionfruit",
+        "baseValue": 3550,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "soul_fruit",
+        "display_name": "Soul Fruit",
+        "baseValue": 7750,
+        "weightDivisor": 25
+        },
+        {
+        "item_id": "cursed_fruit",
+        "display_name": "Cursed Fruit",
+        "baseValue": 25750,
+        "weightDivisor": 30
+        },
+        {
+        "item_id": "mega_mushroom",
+        "display_name": "Mega Mushroom",
+        "baseValue": 500,
+        "weightDivisor": 70
+        },
+        {
+        "item_id": "cherry_blossom",
+        "display_name": "Cherry Blossom",
+        "baseValue": 500,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "purple_cabbage",
+        "display_name": "Purple Cabbage",
+        "baseValue": 500,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "lemon",
+        "display_name": "Lemon",
+        "baseValue": 350,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "pink_tulip",
+        "display_name": "Pink Tulip",
+        "baseValue": 850,
+        "weightDivisor": 0.05
+        },
+        {
+        "item_id": "cranberry",
+        "display_name": "Cranberry",
+        "baseValue": 3500,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "durian",
+        "display_name": "Durian",
+        "baseValue": 7500,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "eggplant",
+        "display_name": "Eggplant",
+        "baseValue": 12000,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "lotus",
+        "display_name": "Lotus",
+        "baseValue": 35000,
+        "weightDivisor": 20
+        },
+        {
+        "item_id": "venus_fly_trap",
+        "display_name": "Venus Fly Trap",
+        "baseValue": 85000,
+        "weightDivisor": 10
+        },
+        {
+        "item_id": "nightshade",
+        "display_name": "Nightshade",
+        "baseValue": 3500,
+        "weightDivisor": 0.5
+        },
+        {
+        "item_id": "glowshroom",
+        "display_name": "Glowshroom",
+        "baseValue": 300,
+        "weightDivisor": 0.75
+        },
+        {
+        "item_id": "mint",
+        "display_name": "Mint",
+        "baseValue": 5250,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "moonflower",
+        "display_name": "Moonflower",
+        "baseValue": 9500,
+        "weightDivisor": 2
+        },
+        {
+        "item_id": "starfruit",
+        "display_name": "Starfruit",
+        "baseValue": 15000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "moonglow",
+        "display_name": "Moonglow",
+        "baseValue": 25000,
+        "weightDivisor": 7
+        },
+        {
+        "item_id": "moon_blossom",
+        "display_name": "Moon Blossom",
+        "baseValue": 66666,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "crimson_vine",
+        "display_name": "Crimson Vine",
+        "baseValue": 1250,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "moon_melon",
+        "display_name": "Moon Melon",
+        "baseValue": 18000,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "blood_banana",
+        "display_name": "Blood Banana",
+        "baseValue": 6000,
+        "weightDivisor": 1.5
+        },
+        {
+        "item_id": "celestiberry",
+        "display_name": "Celestiberry",
+        "baseValue": 10000,
+        "weightDivisor": 2
+        },
+        {
+        "item_id": "moon_mango",
+        "display_name": "Moon Mango",
+        "baseValue": 50000,
+        "weightDivisor": 15
+        },
+        {
+        "item_id": "rose",
+        "display_name": "Rose",
+        "baseValue": 5000,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "foxglove",
+        "display_name": "Foxglove",
+        "baseValue": 20000,
+        "weightDivisor": 2
+        },
+        {
+        "item_id": "lilac",
+        "display_name": "Lilac",
+        "baseValue": 35000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "pink_lily",
+        "display_name": "Pink Lily",
+        "baseValue": 65000,
+        "weightDivisor": 6
+        },
+        {
+        "item_id": "purple_dahlia",
+        "display_name": "Purple Dahlia",
+        "baseValue": 75000,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "sunflower",
+        "display_name": "Sunflower",
+        "baseValue": 160000,
+        "weightDivisor": 16.5
+        },
+        {
+        "item_id": "lavender",
+        "display_name": "Lavender",
+        "baseValue": 25000,
+        "weightDivisor": 0.275
+        },
+        {
+        "item_id": "nectarshade",
+        "display_name": "Nectarshade",
+        "baseValue": 50000,
+        "weightDivisor": 0.8
+        },
+        {
+        "item_id": "nectarine",
+        "display_name": "Nectarine",
+        "baseValue": 48000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "hive_fruit",
+        "display_name": "Hive Fruit",
+        "baseValue": 62000,
+        "weightDivisor": 8
+        },
+        {
+        "item_id": "manuka_flower",
+        "display_name": "Manuka Flower",
+        "baseValue": 25000,
+        "weightDivisor": 0.3
+        },
+        {
+        "item_id": "dandelion",
+        "display_name": "Dandelion",
+        "baseValue": 50000,
+        "weightDivisor": 4
+        },
+        {
+        "item_id": "lumira",
+        "display_name": "Lumira",
+        "baseValue": 85000,
+        "weightDivisor": 6
+        },
+        {
+        "item_id": "honeysuckle",
+        "display_name": "Honeysuckle",
+        "baseValue": 100000,
+        "weightDivisor": 12
+        },
+        {
+        "item_id": "crocus",
+        "display_name": "Crocus",
+        "baseValue": 30000,
+        "weightDivisor": 0.275
+        },
+        {
+        "item_id": "succulent",
+        "display_name": "Succulent",
+        "baseValue": 25000,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "violet_corn",
+        "display_name": "Violet Corn",
+        "baseValue": 50000,
+        "weightDivisor": 3
+        },
+        {
+        "item_id": "bendboo",
+        "display_name": "Bendboo",
+        "baseValue": 155000,
+        "weightDivisor": 18
+        },
+        {
+        "item_id": "cocovine",
+        "display_name": "Cocovine",
+        "baseValue": 66666,
+        "weightDivisor": 14
+        },
+        {
+        "item_id": "dragon_pepper",
+        "display_name": "Dragon Pepper",
+        "baseValue": 88888,
+        "weightDivisor": 6
+        },
+        {
+        "item_id": "bee_balm",
+        "display_name": "Bee Balm",
+        "baseValue": 18000,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "nectar_thorn",
+        "display_name": "Nectar Thorn",
+        "baseValue": 44444,
+        "weightDivisor": 7
+        },
+        {
+        "item_id": "suncoil",
+        "display_name": "Suncoil",
+        "baseValue": 80000,
+        "weightDivisor": 10
+        },
+        {
+        "item_id": "noble_flower",
+        "display_name": "Noble Flower",
+        "baseValue": 20000,
+        "weightDivisor": 5
+        },
+        {
+        "item_id": "ice_cream_bean",
+        "display_name": "Ice Cream Bean",
+        "baseValue": 4500,
+        "weightDivisor": 4
+        },
+        {
+        "item_id": "lime",
+        "display_name": "Lime",
+        "baseValue": 1000,
+        "weightDivisor": 1
+        },
+        {
+        "item_id": "white_mulberry",
+        "display_name": "White Mulberry",
+        "baseValue": 3000,
+        "weightDivisor": 3
+        }
+        ],
+        "mutations": [
+        {
+        "mutation_id": "cooked",
+        "display_name": "Cooked",
+        "multiplier": 10
+        },
+        {
+        "mutation_id": "wet",
+        "display_name": "Wet",
+        "multiplier": 2
+        },
+        {
+        "mutation_id": "galactic",
+        "display_name": "Galactic",
+        "multiplier": 120
+        },
+        {
+        "mutation_id": "dawnbound",
+        "display_name": "Dawnbound",
+        "multiplier": 150
+        },
+        {
+        "mutation_id": "pollinated",
+        "display_name": "Pollinated",
+        "multiplier": 3
+        },
+        {
+        "mutation_id": "honeyglazed",
+        "display_name": "HoneyGlazed",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "meteoric",
+        "display_name": "Meteoric",
+        "multiplier": 125
+        },
+        {
+        "mutation_id": "twisted",
+        "display_name": "Twisted",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "paradisal",
+        "display_name": "Paradisal",
+        "multiplier": 100
+        },
+        {
+        "mutation_id": "windstruck",
+        "display_name": "Windstruck",
+        "multiplier": 2
+        },
+        {
+        "mutation_id": "sundried",
+        "display_name": "Sundried",
+        "multiplier": 85
+        },
+        {
+        "mutation_id": "chilled",
+        "display_name": "Chilled",
+        "multiplier": 2
+        },
+        {
+        "mutation_id": "zombified",
+        "display_name": "Zombified",
+        "multiplier": 25
+        },
+        {
+        "mutation_id": "bloodlit",
+        "display_name": "Bloodlit",
+        "multiplier": 4
+        },
+        {
+        "mutation_id": "burnt",
+        "display_name": "Burnt",
+        "multiplier": 4
+        },
+        {
+        "mutation_id": "drenched",
+        "display_name": "Drenched",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "moonlit",
+        "display_name": "Moonlit",
+        "multiplier": 2
+        },
+        {
+        "mutation_id": "heavenly",
+        "display_name": "Heavenly",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "disco",
+        "display_name": "Disco",
+        "multiplier": 125
+        },
+        {
+        "mutation_id": "cloudtouched",
+        "display_name": "Cloudtouched",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "alienlike",
+        "display_name": "Alienlike",
+        "multiplier": 100
+        },
+        {
+        "mutation_id": "choc",
+        "display_name": "Choc",
+        "multiplier": 2
+        },
+        {
+        "mutation_id": "plasma",
+        "display_name": "Plasma",
+        "multiplier": 5
+        },
+        {
+        "mutation_id": "frozen",
+        "display_name": "Frozen",
+        "multiplier": 10
+        },
+        {
+        "mutation_id": "wiltproof",
+        "display_name": "Wiltproof",
+        "multiplier": 4
+        },
+        {
+        "mutation_id": "shocked",
+        "display_name": "Shocked",
+        "multiplier": 100
+        },
+        {
+        "mutation_id": "fried",
+        "display_name": "Fried",
+        "multiplier": 8
+        },
+        {
+        "mutation_id": "molten",
+        "display_name": "Molten",
+        "multiplier": 25
+        },
+        {
+        "mutation_id": "celestial",
+        "display_name": "Celestial",
+        "multiplier": 120
+        },
+        {
+        "mutation_id": "aurora",
+        "display_name": "Aurora",
+        "multiplier": 90
+        },
+        {
+        "mutation_id": "voidtouched",
+        "display_name": "Voidtouched",
+        "multiplier": 135
+        },
+        {
+        "mutation_id": "verdant",
+        "display_name": "Verdant",
+        "multiplier": 4
+        }
+        ],
+        "variants": [
+        {
+        "variant_id": "normal",
+        "display_name": "Normal",
+        "multiplier": 1
+        },
+        {
+        "variant_id": "gold",
+        "display_name": "Gold",
+        "multiplier": 20
+        },
+        {
+        "variant_id": "rainbow",
+        "display_name": "Rainbow",
+        "multiplier": 50
+        }
+        ]
+    };
+
+    // Populate dropdowns
+    const fruitSelect = document.getElementById('fruitName');
+    const variantSelect = document.getElementById('variant');
+    const mutationContainer = document.getElementById('mutationCheckboxes');
+
+    data.fruits
+  .sort((a, b) => a.display_name.localeCompare(b.display_name))
+  .forEach(fruit => {
+    const option = document.createElement('option');
+    option.value = fruit.item_id;
+    option.textContent = fruit.display_name;
+    fruitSelect.appendChild(option);
+  });
+
+    data.variants.forEach(variant => {
+      const option = document.createElement('option');
+      option.value = variant.display_name;
+      option.textContent = variant.display_name;
+      variantSelect.appendChild(option);
+    });
+
+    data.mutations.forEach(mutation => {
+      const label = document.createElement('label');
+      label.classList.add('checkbox-label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.name = 'mutation';
+      checkbox.value = mutation.display_name;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(mutation.display_name));
+      mutationContainer.appendChild(label);
+    });
+
+    document.getElementById('calcForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const name = fruitSelect.value;
+      const weight = document.getElementById('weight').value;
+      const variant = variantSelect.value;
+      const mutations = Array.from(document.querySelectorAll('input[name="mutation"]:checked'))
+                            .map(cb => cb.value).join(',');
+
+      const url = `https://api.joshlei.com/v2/growagarden/calculate?Name=${encodeURIComponent(name)}&Weight=${encodeURIComponent(weight)}&Variant=${encodeURIComponent(variant)}&Mutation=${encodeURIComponent(mutations)}`;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '⏳ Calculating...';
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        resultDiv.innerHTML = `
+          <strong>Fruit:</strong> ${data.Name}<br>
+          <strong>Weight:</strong> ${data.Weight} KG<br>
+          <strong>Variant:</strong> ${data.Variant}<br>
+          <strong>Mutations:</strong> ${data.Mutation || 'None'}<br>
+          <strong>Total Value:</strong> <span style="color:green;">${Number(data.value).toLocaleString()} 💰</span>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<span style="color:red;">❌ Error: ${error.message}</span>`;
+      }
+    });
+  </script>
 </body>
 </html>
