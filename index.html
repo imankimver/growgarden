@@ -293,21 +293,24 @@
     loadWeather();
   }
 
-  // Refresh the whole page exactly every 5 minutes and 10 seconds
-  function refreshAtExact5Min10Sec() {
+  // Only refresh the whole page exactly every 5 minutes
+  function refreshAtExact5Min() {
     const now = new Date();
-    const timeSinceMidnight = now.getTime() % (24 * 60 * 60 * 1000); // ms since midnight
-    const interval = 310000; // 5 minutes and 10 seconds in milliseconds
-  
-    const msUntilNext = interval - (timeSinceMidnight % interval);
-  
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+    const milliseconds = now.getMilliseconds();
+
+    const minutesUntilNext = 5 - (minutes % 5);
+    const msUntilNext =
+      (minutesUntilNext * 60 * 1000) - (seconds * 1000 + milliseconds);
+
     setTimeout(() => {
       location.reload();
     }, msUntilNext);
   }
-  
-  // Start the 5-minute 10-second exact refresh timer
-  refreshAtExact5Min10Sec();
+
+  // Start the 5-minute exact refresh timer
+  refreshAtExact5Min();
   </script>
   <div class="floating-menu">
   <a href="#seed_stock" title="Seeds">🌱</a>
