@@ -309,6 +309,9 @@
     const msUntilNext =
       (minutesUntilNext * 60 * 1000) - (seconds * 1000 + milliseconds);
 
+    // Add 10 seconds (10,000 milliseconds)
+    msUntilNext += 10000;
+
     setTimeout(() => {
       location.reload();
     }, msUntilNext);
