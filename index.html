@@ -298,27 +298,31 @@
     loadWeather();
   }
 
-  // Only refresh the whole page exactly every 5 minutes
-  function refreshAtExact5Min() {
-    const now = new Date();
-    const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
-    const milliseconds = now.getMilliseconds();
+ // Refresh the page exactly every 5 minutes and 10 seconds
+function refreshEvery5Min10Sec() {
+  const now = new Date();
+  const next = new Date(now.getTime());
 
-    const minutesUntilNext = 5 - (minutes % 5);
-    const msUntilNext =
-      (minutesUntilNext * 60 * 1000) - (seconds * 1000 + milliseconds);
+  next.setSeconds(10);
+  next.setMilliseconds(0);
 
-    // Add 10 seconds (10,000 milliseconds)
-    msUntilNext += 10000;
+  const minutes = now.getMinutes();
+  const remainder = minutes % 5;
+  const addMinutes = remainder === 0 && now.getSeconds() < 10 ? 0 : 5 - remainder;
 
-    setTimeout(() => {
-      location.reload();
-    }, msUntilNext);
-  }
+  next.setMinutes(now.getMinutes() + addMinutes);
 
-  // Start the 5-minute exact refresh timer
-  refreshAtExact5Min();
+  const delay = next.getTime() - now.getTime();
+
+  console.log("Next page refresh in", Math.round(delay / 1000), "seconds");
+
+  setTimeout(() => {
+    location.reload();
+  }, delay);
+}
+
+// Start the exact 5m10s page refresh logic
+refreshEvery5Min10Sec();
   </script>
   <div class="floating-menu">
   <a href="#seed_stock" title="Seeds">🌱</a>
