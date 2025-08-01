@@ -137,90 +137,91 @@
   <div id="info-status">Loading item info...</div>
   <div id="info-container"></div>
 
-  <script>
-    const INFO_API = "https://api.joshlei.com/v2/growagarden/info/";
-    const container = document.getElementById("info-container");
-    const status = document.getElementById("info-status");
+<script>
+  const INFO_API = "https://api.joshlei.com/v2/growagarden/info/";
+  const JSTUDIO_KEY = "js_65d96f2579c0bbf08b691b0838c58d6de1b8c4ec4c8eec120880aff9cd8c26d6";
+  const container = document.getElementById("info-container");
+  const status = document.getElementById("info-status");
 
-    const rarityOrder = {
-      "Mythic": 1,
-      "Legendary": 2,
-      "Epic": 3,
-      "Rare": 4,
-      "Uncommon": 5,
-      "Common": 6,
-      null: 99
-    };
+  const rarityOrder = {
+    "Mythic": 1,
+    "Legendary": 2,
+    "Epic": 3,
+    "Rare": 4,
+    "Uncommon": 5,
+    "Common": 6,
+    null: 99
+  };
 
-    async function loadInfo() {
-      try {
-        const response = await fetch(INFO_API);
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const items = await response.json();
+  async function loadInfo() {
+    try {
+      const response = await fetch(INFO_API, {
+        headers: {
+          "jstudio-key": JSTUDIO_KEY
+        }
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const items = await response.json();
+      container.innerHTML = "";
 
-        container.innerHTML = "";
+      // Group items by type
+      const grouped = {};
+      items.forEach(item => {
+        const type = item.type || "unknown";
+        if (!grouped[type]) grouped[type] = [];
+        grouped[type].push(item);
+      });
 
-        // Group items by type
-        const grouped = {};
-        items.forEach(item => {
-          const type = item.type || "unknown";
-          if (!grouped[type]) grouped[type] = [];
-          grouped[type].push(item);
+      for (const [type, list] of Object.entries(grouped)) {
+        list.sort((a, b) => (rarityOrder[a.rarity] || 99) - (rarityOrder[b.rarity] || 99));
+
+        const section = document.createElement("div");
+        section.className = "type-section";
+        section.innerHTML = `<h2>${type}</h2><div class="info-grid"></div>`;
+        const grid = section.querySelector(".info-grid");
+
+        list.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "info-card";
+          card.innerHTML = `
+            <img src="${item.icon}" alt="${item.display_name}" />
+            <h3>${item.display_name}</h3>
+            <p class="rarity">${item.rarity || 'No Rarity'}</p>
+            <p>${item.description || 'No description.'}</p>
+            ${item.currency && item.price !== "0" ? `<p class="price">${formatPrice(item.price)} ${item.currency}</p>` : ''}
+            ${item.duration && item.duration !== "0" ? `<p><strong>Duration:</strong> ${item.duration} sec</p>` : ''}
+            ${item.last_seen && item.last_seen !== "0" ? `<p><strong>Last Seen:</strong> ${formatUnix(item.last_seen)}</p>` : ''}
+          `;
+          grid.appendChild(card);
         });
 
-        for (const [type, list] of Object.entries(grouped)) {
-          // Sort by rarity
-          list.sort((a, b) => {
-            return (rarityOrder[a.rarity] || 99) - (rarityOrder[b.rarity] || 99);
-          });
-
-          const section = document.createElement("div");
-          section.className = "type-section";
-          section.innerHTML = `<h2>${type}</h2><div class="info-grid"></div>`;
-          const grid = section.querySelector(".info-grid");
-
-          list.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "info-card";
-            card.innerHTML = `
-              <img src="${item.icon}" alt="${item.display_name}" />
-              <h3>${item.display_name}</h3>
-              <p class="rarity">${item.rarity || 'No Rarity'}</p>
-              <p>${item.description || 'No description.'}</p>
-              ${item.currency && item.price !== "0" ? `<p class="price">${formatPrice(item.price)} ${item.currency}</p>` : ''}
-              ${item.duration && item.duration !== "0" ? `<p><strong>Duration:</strong> ${item.duration} sec</p>` : ''}
-              ${item.last_seen && item.last_seen !== "0" ? `<p><strong>Last Seen:</strong> ${formatUnix(item.last_seen)}</p>` : ''}
-            `;
-            grid.appendChild(card);
-          });
-
-          container.appendChild(section);
-        }
-
-        status.textContent = `Loaded ${items.length} items — ${new Date().toLocaleTimeString()}`;
-      } catch (err) {
-        console.error(err);
-        status.textContent = "Failed to load info: " + err.message;
+        container.appendChild(section);
       }
+
+      status.textContent = `Loaded ${items.length} items — ${new Date().toLocaleTimeString()}`;
+    } catch (err) {
+      console.error(err);
+      status.textContent = "Failed to load info: " + err.message;
     }
+  }
 
-    function formatUnix(unix) {
-      const date = new Date(unix * 1000);
-      return date.toLocaleString();
-    }
+  function formatUnix(unix) {
+    return new Date(unix * 1000).toLocaleString();
+  }
 
-    function formatPrice(numberStr) {
-      const num = parseInt(numberStr);
-      if (isNaN(num)) return numberStr;
+  function formatPrice(numberStr) {
+    const num = parseInt(numberStr);
+    if (isNaN(num)) return numberStr;
+    if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num.toString();
+  }
 
-      if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
-      if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-      if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
-      return num.toString();
-    }
+  loadInfo();
+</script>
 
-    loadInfo();
-  </script>
+
   <div class="floating-menu">
   <a href="index.html" title="Seeds">🌱</a>
   <a href="index.html" title="Gear">🛠️</a>
