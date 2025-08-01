@@ -48,7 +48,7 @@
      crossorigin="anonymous"></script>
   <style>
     html {
-  scroll-behavior: smooth;
+      scroll-behavior: smooth;
     }
     body {
       font-family: Arial, sans-serif;
@@ -56,18 +56,14 @@
       margin: 0;
       padding: 10px;
     }
-    a {    text-decoration: none; }
+    a { text-decoration: none; }
     h1 {
       text-align: center;
       color: #2d3e50;
       margin-bottom: 30px;
     }
 
-    .left {
-      width: 100%;
-    }
-
-    .right {
+    .left, .right {
       width: 100%;
     }
 
@@ -184,12 +180,16 @@
 </head>
 <body>
   <h1>🌱 Grow a Garden Dashboard</h1>
-<div class="cta">
+  <div class="cta">
     <a href="https://www.roblox.com/games/126884695634066/Grow-a-Garden" target="_blank">🎮 Play Now on Roblox</a>
-</div>
-<h2 style="text-align: center;text-decoration: none;"><a href="index.html"> 🚀 Stock/Weather Live</a> | <a href="garden-info.html">📖 INFORMATIONS</a> | <a href="https://growagardenlive.com/article/">📖 Articles</a></h2>
+  </div>
+  <h2 style="text-align: center;text-decoration: none;">
+    <a href="index.html"> 🚀 Stock/Weather Live</a> | 
+    <a href="garden-info.html">📖 INFORMATIONS</a> | 
+    <a href="https://growagardenlive.com/article/">📖 Articles</a>
+  </h2>
+
   <div class="dashboard">
-    <!-- Left: Stocks -->
     <div class="left">
       <div id="stock-status">Loading stock data...</div>
       <div id="stocks">
@@ -216,7 +216,6 @@
       </div>
     </div>
 
-    <!-- Right: Weather -->
     <div class="right">
       <div id="weather-status">Loading weather data...</div>
       <div class="category-section">
@@ -226,19 +225,38 @@
     </div>
   </div>
 
-  <script>
-    const STOCK_API = "https://api.joshlei.com/v2/growagarden/stock";
-    const WEATHER_API = "https://api.joshlei.com/v2/growagarden/weather";
+  <div class="category-section">
+    <h2>🛎️ Live Notifications</h2>
+    <div class="stock-grid" id="notification-area">
+      <p>Loading notifications...</p>
+    </div>
+  </div>
 
-    const stockStatus = document.getElementById("stock-status");
-    const weatherStatus = document.getElementById("weather-status");
+  <div class="category-section">
+    <h2>🛒 Traveling Merchant Stock</h2>
+    <div class="stock-grid" id="merchant-area">
+      <p>Loading merchant stock...</p>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'https://api.joshlei.com/v2/growagarden/';
+    const JSTUDIO_KEY = 'js_65d96f2579c0bbf08b691b0838c58d6de1b8c4ec4c8eec120880aff9cd8c26d6';
+
+    async function fetchData(endpoint, params = '') {
+      const res = await fetch(BASE_URL + endpoint + params, {
+        headers: { 'jstudio-key': JSTUDIO_KEY }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    async function getStock() { return await fetchData('stock'); }
+    async function getWeather() { return await fetchData('weather'); }
 
     async function loadStock() {
       try {
-        const response = await fetch(STOCK_API);
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const data = await response.json();
-
+        const data = await getStock();
         const categories = ["seed_stock", "gear_stock", "egg_stock", "cosmetic_stock", "eventshop_stock"];
         categories.forEach(cat => {
           document.querySelector(`#${cat} .stock-grid`).innerHTML = "";
@@ -247,7 +265,6 @@
         for (const [key, items] of Object.entries(data)) {
           const grid = document.querySelector(`#${key} .stock-grid`);
           if (!grid || !Array.isArray(items)) continue;
-
           items.forEach(item => {
             const card = document.createElement("div");
             card.className = "stock-card";
@@ -261,26 +278,22 @@
             grid.appendChild(card);
           });
         }
-
-        stockStatus.textContent = "Stock last updated: " + new Date().toLocaleTimeString();
+        document.getElementById("stock-status").textContent = "Stock last updated: " + new Date().toLocaleTimeString();
       } catch (err) {
         console.error(err);
-        stockStatus.textContent = "Failed to load stock: " + err.message;
+        document.getElementById("stock-status").textContent = "Failed to load stock: " + err.message;
       }
     }
 
     async function loadWeather() {
       try {
-        const response = await fetch(WEATHER_API);
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const json = await response.json();
-
+        const json = await getWeather();
         const weatherList = json.weather?.filter(item => item.active === true) || [];
         const container = document.getElementById("weather-container");
         container.innerHTML = "";
 
         if (weatherList.length === 0) {
-          weatherStatus.textContent = "No active weather events right now.";
+          document.getElementById("weather-status").textContent = "No active weather events right now.";
           return;
         }
 
@@ -296,154 +309,101 @@
           container.appendChild(card);
         });
 
-        weatherStatus.textContent = "Weather last updated: " + new Date().toLocaleTimeString();
+        document.getElementById("weather-status").textContent = "Weather last updated: " + new Date().toLocaleTimeString();
       } catch (err) {
         console.error(err);
-        weatherStatus.textContent = "Failed to load weather data: " + err.message;
+        document.getElementById("weather-status").textContent = "Failed to load weather data: " + err.message;
       }
     }
 
-    function formatDate(iso) {
-      const d = new Date(iso);
-      return d.toLocaleString();
-    }
-    // Load data once on page load
-  window.addEventListener("DOMContentLoaded", () => {
-    refreshAll();
-  }); 
-  
-    // Refresh manually triggered
-  function refreshAll() {
-    loadStock();
-    loadWeather();
-  }
-
- // Refresh the page exactly every 5 minutes and 10 seconds
-function refreshEvery5Min10Sec() {
-  const now = new Date();
-  const next = new Date(now.getTime());
-
-  next.setSeconds(10);
-  next.setMilliseconds(0);
-
-  const minutes = now.getMinutes();
-  const remainder = minutes % 5;
-  const addMinutes = remainder === 0 && now.getSeconds() < 10 ? 0 : 5 - remainder;
-
-  next.setMinutes(now.getMinutes() + addMinutes);
-
-  const delay = next.getTime() - now.getTime();
-
-  console.log("Next page refresh in", Math.round(delay / 1000), "seconds");
-
-  setTimeout(() => {
-    location.reload();
-  }, delay);
-}
-
-// Start the exact 5m10s page refresh logic
-refreshEvery5Min10Sec();
-  </script>
-  <div class="floating-menu">
-  <a href="#seed_stock" title="Seeds">🌱</a>
-  <a href="#gear_stock" title="Gear">🛠️</a>
-  <a href="#egg_stock" title="Eggs">🥚</a>
-  <a href="#cosmetic_stock" title="Cosmetics">💄</a>
-  <a href="#eventshop_stock" title="Event Shop">🎉</a>
-  <a href="#weather-container" title="Weather">🌤️</a>
-  <a href="garden-info.html" title="Weather">📖</a>
-</div>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6331752744885927"
-     crossorigin="anonymous"></script>
-<!-- main ads -->
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-6331752744885927"
-     data-ad-slot="3225022961"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-<!-- 🛎️ Live Notifications Section -->
-  <div class="category-section">
-    <h2>🛎️ Live Notifications</h2>
-    <div class="stock-grid" id="notification-area">
-      <p>Loading notifications...</p>
-    </div>
-  </div>
-
-  <!-- 🛒 Traveling Merchant Stock Section -->
-  <div class="category-section">
-    <h2>🛒 Traveling Merchant Stock</h2>
-    <div class="stock-grid" id="merchant-area">
-      <p>Loading merchant stock...</p>
-    </div>
-  </div>
-
-  <!-- Script to Fetch and Render Data -->
-  <script>
-    const STOCK_API = "https://api.joshlei.com/v2/growagarden/stock";
-
     async function loadExtras() {
       try {
-        const res = await fetch(STOCK_API);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
+        const data = await getStock();
         const now = Math.floor(Date.now() / 1000);
 
-        // 🛎️ Notifications
         const notificationArea = document.getElementById("notification-area");
-        const activeNotifs = (data.notification || []).filter(n =>
-          now >= n.timestamp && now <= n.end_timestamp
-        );
-        if (activeNotifs.length > 0) {
-          notificationArea.innerHTML = activeNotifs.map(n => `
-            <div class="stock-card">
-              <h3>${n.message}</h3>
-              <p><strong>Start:</strong> ${formatUnix(n.timestamp)}</p>
-              <p><strong>End:</strong> ${formatUnix(n.end_timestamp)}</p>
-            </div>
-          `).join("");
-        } else {
-          notificationArea.innerHTML = `<p style="color: gray;">No active notifications.</p>`;
-        }
+        const activeNotifs = (data.notification || []).filter(n => now >= n.timestamp && now <= n.end_timestamp);
+        notificationArea.innerHTML = activeNotifs.length > 0
+          ? activeNotifs.map(n => `
+              <div class="stock-card">
+                <h3>${n.message}</h3>
+                <p><strong>Start:</strong> ${formatUnix(n.timestamp)}</p>
+                <p><strong>End:</strong> ${formatUnix(n.end_timestamp)}</p>
+              </div>`).join("")
+          : `<p style="color: gray;">No active notifications.</p>`;
 
-        // 🛒 Traveling Merchant
         const merchantArea = document.getElementById("merchant-area");
         const merchantStock = (data.travelingmerchant_stock || []).filter(item =>
           now >= item.start_date_unix && now <= item.end_date_unix
         );
-
-        if (merchantStock.length > 0) {
-          merchantArea.innerHTML = merchantStock.map(item => `
-            <div class="stock-card">
-              <img src="${item.icon}" alt="${item.display_name}" />
-              <h3>${item.display_name}</h3>
-              <p><strong>Qty:</strong> ${item.quantity}</p>
-              <p><strong>Ends:</strong> ${formatUnix(item.end_date_unix)}</p>
-            </div>
-          `).join("");
-        } else {
-          merchantArea.innerHTML = `<p style="color: gray;">No merchant items available right now.</p>`;
-        }
-
+        merchantArea.innerHTML = merchantStock.length > 0
+          ? merchantStock.map(item => `
+              <div class="stock-card">
+                <img src="${item.icon}" alt="${item.display_name}" />
+                <h3>${item.display_name}</h3>
+                <p><strong>Qty:</strong> ${item.quantity}</p>
+                <p><strong>Ends:</strong> ${formatUnix(item.end_date_unix)}</p>
+              </div>`).join("")
+          : `<p style="color: gray;">No merchant items available right now.</p>`;
       } catch (err) {
-        console.error("Error loading stock:", err);
+        console.error("Error loading extras:", err);
         document.getElementById("notification-area").textContent = "Failed to load notifications.";
         document.getElementById("merchant-area").textContent = "Failed to load merchant stock.";
       }
     }
 
-    function formatUnix(unix) {
-      return new Date(unix * 1000).toLocaleString();
+    function formatDate(iso) { return new Date(iso).toLocaleString(); }
+    function formatUnix(unix) { return new Date(unix * 1000).toLocaleString(); }
+
+    function refreshEvery5Min10Sec() {
+      const now = new Date();
+      const next = new Date(now.getTime());
+      next.setSeconds(10);
+      next.setMilliseconds(0);
+
+      const remainder = now.getMinutes() % 5;
+      const addMinutes = remainder === 0 && now.getSeconds() < 10 ? 0 : 5 - remainder;
+      next.setMinutes(now.getMinutes() + addMinutes);
+
+      const delay = next.getTime() - now.getTime();
+      console.log("Next page refresh in", Math.round(delay / 1000), "seconds");
+
+      setTimeout(() => location.reload(), delay);
     }
 
-    // Run on page load + every 60 seconds
-    window.addEventListener("DOMContentLoaded", loadExtras);
-    setInterval(loadExtras, 60000);
+    window.addEventListener("DOMContentLoaded", () => {
+      loadStock();
+      loadWeather();
+      loadExtras();
+      refreshEvery5Min10Sec();
+      setInterval(() => {
+        loadStock();
+        loadWeather();
+        loadExtras();
+      }, 60000);
+    });
   </script>
-<!-- Site Introduction and Calculator Info -->
+
+  <div class="floating-menu">
+    <a href="#seed_stock" title="Seeds">🌱</a>
+    <a href="#gear_stock" title="Gear">🛠️</a>
+    <a href="#egg_stock" title="Eggs">🥚</a>
+    <a href="#cosmetic_stock" title="Cosmetics">💄</a>
+    <a href="#eventshop_stock" title="Event Shop">🎉</a>
+    <a href="#weather-container" title="Weather">🌤️</a>
+    <a href="garden-info.html" title="Info">📖</a>
+  </div>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6331752744885927"
+     crossorigin="anonymous"></script>
+  <ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-6331752744885927"
+     data-ad-slot="3225022961"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <!-- Site Introduction and Calculator Info -->
 <!-- Grow A Garden Live - Overview Section -->
 <div style="max-width: 960px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.05); line-height: 1.6; color: #333;">
   <h2 style="text-align: center; color: #2d3e50;">🌿 What is Grow A Garden Live?</h2>
